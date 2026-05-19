@@ -16,6 +16,6 @@ public class ContentResponse {
     private String type;
     private Long topicId;
 
-    private String uploadedBy;
+    private String uploadedByName;
 
 }

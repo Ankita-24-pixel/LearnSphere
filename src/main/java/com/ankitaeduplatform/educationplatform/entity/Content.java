@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-public class Content {
+public class  Content {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +30,9 @@ public class Content {
     @ManyToOne
     private Topic topic;
 
-    private String uploadedBy;
+    @ManyToOne
+    @JoinColumn(name = "uploaded_by")
+    private User uploadedBy;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

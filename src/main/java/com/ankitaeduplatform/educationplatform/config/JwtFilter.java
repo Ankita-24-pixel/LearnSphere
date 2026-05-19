@@ -2,13 +2,16 @@ package com.ankitaeduplatform.educationplatform.config;
 
 import com.ankitaeduplatform.educationplatform.entity.User;
 import com.ankitaeduplatform.educationplatform.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -32,42 +35,48 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        // ✅ 1. Skip public endpoints
-        if (path.startsWith("/auth") ||
-                path.equals("/content") ||
-                path.startsWith("/content/topic")) {
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String username = null;
 
+        //extract token
+        if(authHeader!= null && authHeader.startsWith("Bearer ")){
+            token = authHeader.substring(7);
+        }
+        //no token
+        if(token == null){
             filterChain.doFilter(request, response);
             return;
         }
-
-        // ✅ 2. Get token
-        String header = request.getHeader("Authorization");
-
-        if (header == null || !header.startsWith("Bearer ")) {
-            // ❗ DO NOT BLOCK → just continue
-            filterChain.doFilter(request, response);
+        try{
+            //extract username from token
+            username = jwtUtility.extractUserName(token);
+        }catch(JwtException | IllegalArgumentException e){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+            Optional<User> userOpt = userRepository.findByEmail(username);
+            if(userOpt.isPresent()){
+                User user = userOpt.get();
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        String token = header.substring(7);
-
-        // ✅ 3. Validate token (your logic here)
-        if (token == null || token.isEmpty() || token.equals("null") || token.equals("undefined")) {
-            filterChain.doFilter(request, response);
-            return;
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
         }
-//        try {
-//            Optional<User> userOpt = userRepository.findByEmail(use);
-//
-//        } catch (Exception e) {
-//            // ✅ THIS IS CRUCIAL
-//            System.out.println("TOKEN" + token);
-//            System.out.println("Invalid JWT token: " + token);
-//        }
-
         filterChain.doFilter(request, response);
+    }
+    public boolean validateToken(String token){
+        try{
+            jwtUtility.extractUserName(token);
+            return true;
+        }catch(Exception e){
+            return false;
+        }
     }
 
 

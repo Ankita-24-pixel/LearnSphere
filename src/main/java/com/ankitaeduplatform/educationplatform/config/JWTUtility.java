@@ -14,9 +14,10 @@ public class JWTUtility {
     private static final String SECRET = "fdafe8ryq3ue102i1ifsaodifhaiohp9323nkfhiafasfu490fklafiaoeipor332";
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
     
-    public String generateToken(String userName){
+    public String generateToken(String userName, String role){
         return Jwts.builder()
                 .setSubject(userName)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(key)
@@ -30,5 +31,13 @@ public class JWTUtility {
                 .getPayload()
                 .getSubject();
                 
+    }
+    public String extractRole(String token) {
+        return Jwts.parser()
+                .verifyWith((SecretKey) key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
     }
 }

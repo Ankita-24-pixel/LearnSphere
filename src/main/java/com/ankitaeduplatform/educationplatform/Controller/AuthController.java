@@ -38,7 +38,8 @@ public class AuthController {
                 user.getPassword()
         );
         if(isAuthenticated){
-            String token = jwtUtility.generateToken(user.getEmail());
+            User userbyemail = userService.findByEmail(user.getEmail()).get();
+            String token = jwtUtility.generateToken(userbyemail.getEmail(), userbyemail.getRole());
             return ResponseEntity.ok(Collections.singletonMap("token", token));
         }else{
             return ResponseEntity.status(401).body("Invalid credentials");

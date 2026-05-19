@@ -1,8 +1,12 @@
 package com.ankitaeduplatform.educationplatform.Controller;
 
+import com.ankitaeduplatform.educationplatform.Service.CourseService;
+import com.ankitaeduplatform.educationplatform.dto.*;
 import com.ankitaeduplatform.educationplatform.entity.*;
 import com.ankitaeduplatform.educationplatform.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,67 +16,194 @@ import java.util.List;
 public class CourseController {
 
     @Autowired
-    private CourseRepository courseRepository;
+    private CourseService courseService;
 
-    @Autowired
-    private YearRepository yearRepository;
-
-    @Autowired
-    private SubjectRepository subjectRepository;
-
-    @Autowired
-    private ChapterRepository chapterRepository;
-
-    @Autowired
-    private TopicRepository topicRepository;
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Course addCourse(@RequestBody Course course){
-        return courseRepository.save(course);
+        return courseService.saveCourse(course);
     }
 
     @GetMapping
-    public List<Course> getAllCourses(){
-        return courseRepository.findAll();
+    public List<CourseResponse> getAllCourses(){
+        return courseService.getAllCourses()
+                .stream()
+                .map(course -> new CourseResponse(
+                        course.getId(),
+                        course.getName()
+                ))
+                .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/year")
     public Year addYear(@RequestBody Year year){
-        return yearRepository.save(year);
+        return courseService.saveYear(year);
     }
 
-    @GetMapping("/year")
-    public List<Year> getAllYears(){
-        return yearRepository.findAll();
+    @GetMapping("/years")
+    public List<YearResponse> getAllYears(){
+        return courseService.getAllYears()
+                .stream()
+                .map(year -> new YearResponse(
+                        year.getId(),
+                        year.getSem(),
+                        year.getCourse().getId(),
+                        year.getCourse().getName()
+                ))
+                .toList();
+    }
+    @GetMapping("/{courseId}/years")
+    public List<YearResponse> getAllYearsByCourseId(@PathVariable Long courseId){
+        return courseService.getYearsByCourseId(courseId)
+                .stream()
+                .map(year -> new YearResponse(
+                        year.getId(),
+                        year.getSem(),
+                        year.getCourse().getId(),
+                        year.getCourse().getName()
+                ))
+                .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/subject")
     public Subject addSubject(@RequestBody Subject subject){
-        return subjectRepository.save(subject);
+        return courseService.saveSubject(subject);
     }
 
-    @GetMapping("/subject")
-    public List<Subject> getAllSubjects(){
-        return subjectRepository.findAll();
+    @GetMapping("/subjects")
+    public List<SubjectResponse> getAllSubjects(){
+        return courseService.getAllSubjects()
+                .stream()
+                .map(subject -> new SubjectResponse(
+                        subject.getId(),
+                        subject.getName(),
+                        subject.getSem().getId(),
+                        subject.getSem().getSem(),
+                        subject.getSem().getCourse().getName()
+                ))
+                .toList();
+    }
+    @GetMapping("/year/{semId}/subjects")
+    public List<SubjectResponse> getAllSubjectsByYearId(@PathVariable Long semId){
+        return courseService.getSubjectsByYearId(semId)
+                .stream()
+                .map(subject -> new SubjectResponse(
+                        subject.getId(),
+                        subject.getName(),
+                        subject.getSem().getId(),
+                        subject.getSem().getSem(),
+                        subject.getSem().getCourse().getName()
+                ))
+                .toList();
+    }
+    @GetMapping("/subject/search")
+    public List<SubjectResponse> searchSubject(@RequestParam String keyword){
+        return courseService.searchBySubject(keyword)
+                .stream()
+                .map(subject -> new SubjectResponse(
+                        subject.getId(),
+                        subject.getName(),
+                        subject.getSem().getId(),
+                        subject.getSem().getSem(),
+                        subject.getSem().getCourse().getName()
+                ))
+                .toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/chapter")
     public Chapter addChapter(@RequestBody Chapter chapter){
-        return chapterRepository.save(chapter);
+        return courseService.saveChapter(chapter);
     }
 
-    @GetMapping("/chapter")
-    public List<Chapter> getAllChapters(){
-        return chapterRepository.findAll();
+    @GetMapping("/chapters")
+    public List<ChapterResponse> getAllChapters(){
+        return courseService.getAllChapters()
+                .stream()
+                .map(chapter -> new ChapterResponse(
+                        chapter.getId(),
+                        chapter.getName(),
+                        chapter.getSubject().getId(),
+                        chapter.getSubject().getName(),
+                        chapter.getSubject().getSem().getSem(),
+                        chapter.getSubject().getSem().getCourse().getName()
+                )).toList();
+    }
+    @GetMapping("/subject/{subjectId}/chapters")
+    public List<ChapterResponse> getAllChaptersBySubjectId(@PathVariable Long subjectId){
+        return courseService.getChapterBySubjectId(subjectId)
+                .stream()
+                .map(chapter -> new ChapterResponse(
+                        chapter.getId(),
+                        chapter.getName(),
+                        chapter.getSubject().getId(),
+                        chapter.getSubject().getName(),
+                        chapter.getSubject().getSem().getSem(),
+                        chapter.getSubject().getSem().getCourse().getName()
+                )).toList();
+    }
+    @GetMapping("/chapter/search")
+    public List<ChapterResponse> searchChapter(@RequestParam String keyword){
+        return courseService.searchByChapter(keyword)
+                .stream()
+                .map(chapter -> new ChapterResponse(
+                        chapter.getId(),
+                        chapter.getName(),
+                        chapter.getSubject().getId(),
+                        chapter.getSubject().getName(),
+                        chapter.getSubject().getSem().getSem(),
+                        chapter.getSubject().getSem().getCourse().getName()
+                )).toList();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/topic")
     public Topic addTopic(@RequestBody Topic topic){
-        return topicRepository.save(topic);
+        return courseService.saveTopic(topic);
     }
 
-    @GetMapping("/topic")
-    public List<Topic> getAllTopics(){
-        return topicRepository.findAll();
+    @GetMapping("/topics")
+    public List<TopicResponse> getAllTopics(){
+        return courseService.getAllTopics()
+                .stream()
+                .map(topic -> new TopicResponse(
+                        topic.getId(),
+                        topic.getName(),
+                        topic.getChapter().getId(),
+                        topic.getChapter().getName(),
+                        topic.getChapter().getSubject().getName(),
+                        topic.getChapter().getSubject().getSem().getSem(),
+                        topic.getChapter().getSubject().getSem().getCourse().getName()
+                )).toList();
+    }
+    @GetMapping("/chapter/{chapterId}/topics")
+    public List<TopicResponse> getAllTopicsByChapterId(@PathVariable Long chapterId){
+        return courseService.getTopicByChapterId(chapterId)
+                .stream()
+                .map(topic -> new TopicResponse(
+                        topic.getId(),
+                        topic.getName(),
+                        topic.getChapter().getId(),
+                        topic.getChapter().getName(),
+                        topic.getChapter().getSubject().getName(),
+                        topic.getChapter().getSubject().getSem().getSem(),
+                        topic.getChapter().getSubject().getSem().getCourse().getName()
+                )).toList();
+    }
+    @GetMapping("/topic/search")
+    public List<TopicResponse> searchTopics(@RequestParam String keyword){
+        return courseService.searchByTopic(keyword)
+                .stream()
+                .map(topic -> new TopicResponse(
+                        topic.getId(),
+                        topic.getName(),
+                        topic.getChapter().getId(),
+                        topic.getChapter().getName(),
+                        topic.getChapter().getSubject().getName(),
+                        topic.getChapter().getSubject().getSem().getSem(),
+                        topic.getChapter().getSubject().getSem().getCourse().getName()
+                )).toList();
     }
 }

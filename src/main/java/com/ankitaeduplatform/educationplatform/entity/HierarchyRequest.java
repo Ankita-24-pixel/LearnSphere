@@ -7,15 +7,18 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-public class Subject {
+public class HierarchyRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String type; //course, topic, subject, chapter
+
     private String name;
 
+    private String status = "PENDING";
+
     @ManyToOne
-    @JoinColumn(name = "sem_id")
-    private Year sem;
+    private User requestedBy;
 }
