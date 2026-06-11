@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -21,8 +23,13 @@ public class  Content {
     @Column(nullable = false)
     private String url;
 
-    @Column(nullable = false)
-    private int likes = 0;
+    @ManyToMany
+    @JoinTable(
+            name = "content_likes",
+            joinColumns = @JoinColumn(name = "content_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> likedByUsers = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private ContentType type;

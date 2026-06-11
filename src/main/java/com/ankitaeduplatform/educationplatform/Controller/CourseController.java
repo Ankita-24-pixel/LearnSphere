@@ -18,7 +18,6 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Course addCourse(@RequestBody Course course){
         return courseService.saveCourse(course);
@@ -35,7 +34,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/year")
     public Year addYear(@RequestBody Year year){
         return courseService.saveYear(year);
@@ -66,7 +64,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/subject")
     public Subject addSubject(@RequestBody Subject subject){
         return courseService.saveSubject(subject);
@@ -112,7 +109,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/chapter")
     public Chapter addChapter(@RequestBody Chapter chapter){
         return courseService.saveChapter(chapter);
@@ -158,7 +154,6 @@ public class CourseController {
                 )).toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/topic")
     public Topic addTopic(@RequestBody Topic topic){
         return courseService.saveTopic(topic);

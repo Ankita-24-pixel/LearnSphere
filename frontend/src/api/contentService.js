@@ -1,8 +1,15 @@
-import axiosInstance from './axiosInstance';
+import axiosInstance from './axiosInstance'; // <-- Must use your instance!
 
-// Upload new content to a specific topic
+// Upload Content (Links, PDFs, Videos)
 export const uploadContent = async (contentData) => {
-  // Your backend ContentController expects a POST to /content
-  const response = await axiosInstance.post('/content', contentData);
-  return response.data;
+    try {
+
+        const response = await axiosInstance.post('/content', contentData, {
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error saving to database:", error);
+        throw error;
+    }
 };

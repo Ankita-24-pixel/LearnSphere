@@ -11,6 +11,7 @@ import UploadContent from './pages/UploadContent';
 import CreateSubject from './pages/CreateSubject';
 import CreateChapter from './pages/CreateChapter';
 import GlobalAddContent from './pages/GlobalAddContent';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
   return (
@@ -19,7 +20,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="courses" element={<Courses />} />
           <Route path="courses/new" element={<CreateCourse />} />

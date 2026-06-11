@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { getYearsByCourseId, getSubjectsByYearId, getChaptersBySubjectId, getTopicsByChapterId ,getContentByTopicId, likeContent} from '../api/hierarchyService';
+import UploadContent from './UploadContent';
 const Dashboard = () => {
 
   // 1. Core Data State
@@ -23,6 +24,8 @@ const Dashboard = () => {
 
     const [activeTopic, setActiveTopic] = useState(null);
       const [topicContent, setTopicContent] = useState([]);
+
+  const [showUploadForm, setShowUploadForm] = useState(false);
 
   // Fetch Initial Courses on Load
   useEffect(() => {
@@ -89,6 +92,7 @@ const Dashboard = () => {
 // Handler: When a Topic is clicked (Fetch REAL Content)
   const handleTopicClick = async (topic) => {
     setActiveTopic(topic);
+    setShowUploadForm(false);
 
     try {
       // Fetching the real content from your database!
@@ -121,6 +125,20 @@ const Dashboard = () => {
       console.error("Failed to like content", err);
     }
   };
+const handleDelete = async (id) => {
+  try {
+    await axiosInstance.delete(`/content/${id}`);
+
+    setContents(prev =>
+      prev.filter(content => content.id !== id)
+    );
+
+    alert("Content deleted successfully");
+  } catch (error) {
+    alert("Failed to delete content");
+    console.error(error);
+  }
+};
 
   if (isLoading) return <div className="p-8 text-center text-gray-500 font-semibold text-xl animate-pulse">Loading Workspace...</div>;
 
@@ -178,7 +196,23 @@ const Dashboard = () => {
               <h3 className="text-lg font-bold text-gray-900">{course.name}</h3>
               <p className="text-sm text-gray-500 mt-2">Click to view semesters →</p>
             </div>
-          ))}
+          ))},
+      {contents.map(content => (
+        <div key={content.id}>
+          <h3>{content.title}</h3>
+
+          <a href={content.url}>Open</a>
+
+          {content.isOwner && (
+            <button
+              onClick={() => handleDelete(content.id)}
+              className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      ))}
         </div>
       )}
 
@@ -285,74 +319,89 @@ const Dashboard = () => {
                 </div>
               )}
         {/* --- LEVEL 6: CONTENT VIEWER (Only show if Topic is selected) --- */}
-              {activeTopic && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
-                  <div className="bg-indigo-50 p-6 border-b border-indigo-100 flex justify-between items-center">
-                    <div>
-                      <h2 className="text-2xl font-bold text-indigo-900">{activeTopic.name}</h2>
-                      <p className="text-indigo-700 text-sm mt-1">Study Materials and Resources</p>
-                    </div>
+            {/* --- LEVEL 6: CONTENT VIEWER (Only show if Topic is selected) --- */}
+            {activeTopic && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+                <div className="bg-indigo-50 p-6 border-b border-indigo-100 flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-indigo-900">{activeTopic.name}</h2>
+                    <p className="text-indigo-700 text-sm mt-1">Study Materials and Resources</p>
                   </div>
+                  <button
+                    onClick={() => setShowUploadForm(!showUploadForm)}
+                    className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                  >
+                    {showUploadForm ? 'Cancel Upload' : '+ Add PDF / Video'}
+                  </button>
+                </div>
 
-                  <div className="p-6">
-                    {topicContent.length === 0 ? (
-                      <p className="text-gray-500 italic">No content uploaded for this topic yet.</p>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {topicContent.map((content) => (
-                          <a
-                            key={content.id}
-                            href={content.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex flex-col p-4 rounded-lg border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all cursor-pointer"
-                          >
-                            <div className="flex items-start">
-                              {/* Dynamic Icon based on your enum type */}
-                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl mr-4 ${
-                                content.type?.toLowerCase() === 'pdf' ? 'bg-red-100 text-red-600' :
-                                content.type?.toLowerCase() === 'video' ? 'bg-blue-100 text-blue-600' :
-                                'bg-green-100 text-green-600'
-                              }`}>
-                                {content.type?.toLowerCase() === 'pdf' ? '📄' : content.type?.toLowerCase() === 'video' ? '▶️' : '🔗'}
-                              </div>
+                <div className="p-6">
+                  {/* 🚀 THE MISSING PIECE: The Upload Form renders here if the button is clicked! */}
+                  {showUploadForm && (
+                     <div className="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                       <UploadContent topicId={activeTopic.id} />
+                     </div>
+                  )}
 
-                              <div className="flex-1">
-                                <h4 className="font-bold text-gray-900">{content.title}</h4>
-                                <div className="flex items-center space-x-2 mt-1">
-                                   <span className="text-xs text-gray-500 uppercase tracking-wide bg-gray-100 px-2 py-0.5 rounded">
-                                     {content.type}
-                                   </span>
-                                   <span className="text-xs text-gray-400">
-                                     By {content.uploadedByName || 'Unknown'}
-                                   </span>
-                                </div>
-                              </div>
+                  {/* Your Existing Content Mapping */}
+                  {topicContent.length === 0 ? (
+                    <p className="text-gray-500 italic">No content uploaded for this topic yet.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {topicContent.map((content) => (
+                        <a
+                          key={content.id}
+                          href={content.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col p-4 rounded-lg border border-gray-100 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-start">
+                            {/* Dynamic Icon based on your enum type */}
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl mr-4 ${
+                              content.type?.toLowerCase() === 'pdf' ? 'bg-red-100 text-red-600' :
+                              content.type?.toLowerCase() === 'video' ? 'bg-blue-100 text-blue-600' :
+                              'bg-green-100 text-green-600'
+                            }`}>
+                              {content.type?.toLowerCase() === 'pdf' ? '📄' : content.type?.toLowerCase() === 'video' ? '▶️' : '🔗'}
                             </div>
 
-                            {/* Displaying your Likes! */}
-                            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
-                                                   <button
-                                                     onClick={(e) => handleLike(e, content.id)}
-                                                     className={`flex items-center text-sm font-semibold transition-colors p-2 -mr-2 rounded-lg
-                                                       ${content.likedByCurrentUser
-                                                           ? 'text-red-500 bg-red-50'
-                                                           : 'text-gray-500 hover:text-red-500 hover:bg-gray-50'
-                                                       }`}
-                                                   >
-                                                     <span className="mr-1">
-                                                       {content.likedByCurrentUser ? '❤️' : '🤍'}
-                                                     </span>
-                                                     {content.likes || 0} Likes
-                                                   </button>
-                                                </div>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                            <div className="flex-1">
+                              <h4 className="font-bold text-gray-900">{content.title}</h4>
+                              <div className="flex items-center space-x-2 mt-1">
+                                 <span className="text-xs text-gray-500 uppercase tracking-wide bg-gray-100 px-2 py-0.5 rounded">
+                                   {content.type}
+                                 </span>
+                                 <span className="text-xs text-gray-400">
+                                   By {content.uploadedByName || 'Unknown'}
+                                 </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Displaying your Likes! */}
+                          <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                             <button
+                               onClick={(e) => handleLike(e, content.id)}
+                               className={`flex items-center text-sm font-semibold transition-colors p-2 -mr-2 rounded-lg
+                                 ${content.likedByCurrentUser
+                                     ? 'text-red-500 bg-red-50'
+                                     : 'text-gray-500 hover:text-red-500 hover:bg-gray-50'
+                                 }`}
+                             >
+                               <span className="mr-1">
+                                 {content.likedByCurrentUser ? '❤️' : '🤍'}
+                               </span>
+                               {content.likes || 0} Likes
+                             </button>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
 
     </div>

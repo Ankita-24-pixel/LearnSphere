@@ -6,6 +6,7 @@ import { getYearsByCourseId, getSubjectsByYearId, getChaptersBySubjectId, getTop
 import { uploadContent } from '../api/contentService';
 import { createYear, createSubject, createChapter, createTopic } from '../api/hierarchyService';
 
+
 export default function GlobalAddContent() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

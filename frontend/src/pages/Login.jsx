@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { BookOpen, Lock, Mail, AlertCircle } from 'lucide-react';
 import { loginUser } from '../api/authService';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || '/dashboard';
 
   // Using email state to match your backend's authenticateUser requirement
   const [email, setEmail] = useState('');
@@ -18,9 +20,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Pass email to the service
       await loginUser(email, password);
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {

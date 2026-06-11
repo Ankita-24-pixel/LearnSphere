@@ -17,5 +17,7 @@ public class ContentResponse {
     private Long topicId;
 
     private String uploadedByName;
+    private boolean isLikedByCurrentUser;
+    private boolean isOwner;
 
 }

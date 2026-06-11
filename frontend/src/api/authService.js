@@ -1,12 +1,12 @@
 import axiosInstance from './axiosInstance';
 
-// FIXED: Using email instead of userName
 export const loginUser = async (email, password) => {
-  const response = await axiosInstance.post('/auth/login', { email, password });
+  const response = await axiosInstance.post(
+    '/auth/login',
+    { email, password },
+    { withCredentials: true }
+  );
 
-  if (response.data && response.data.token) {
-    localStorage.setItem('jwt_token', response.data.token);
-  }
   return response.data;
 };
 
