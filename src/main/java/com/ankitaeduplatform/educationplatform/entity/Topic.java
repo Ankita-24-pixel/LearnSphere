@@ -7,6 +7,10 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(
+        uniqueConstraints =
+        @UniqueConstraint(columnNames={"chapter_id","name"})
+)
 public class Topic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

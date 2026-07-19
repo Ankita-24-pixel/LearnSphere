@@ -5,6 +5,7 @@ import com.ankitaeduplatform.educationplatform.dto.*;
 import com.ankitaeduplatform.educationplatform.entity.*;
 import com.ankitaeduplatform.educationplatform.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,6 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Course addCourse(@RequestBody Course course){
         return courseService.saveCourse(course);
@@ -35,7 +35,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/year")
     public Year addYear(@RequestBody Year year){
         return courseService.saveYear(year);
@@ -66,7 +65,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/subject")
     public Subject addSubject(@RequestBody Subject subject){
         return courseService.saveSubject(subject);
@@ -112,7 +110,6 @@ public class CourseController {
                 .toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/chapter")
     public Chapter addChapter(@RequestBody Chapter chapter){
         return courseService.saveChapter(chapter);
@@ -158,7 +155,6 @@ public class CourseController {
                 )).toList();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/topic")
     public Topic addTopic(@RequestBody Topic topic){
         return courseService.saveTopic(topic);
@@ -205,5 +201,10 @@ public class CourseController {
                         topic.getChapter().getSubject().getSem().getSem(),
                         topic.getChapter().getSubject().getSem().getCourse().getName()
                 )).toList();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCourse(@PathVariable Long id){
+        courseService.deleteCourse(id);
+        return ResponseEntity.ok("Course deleted successfully");
     }
 }

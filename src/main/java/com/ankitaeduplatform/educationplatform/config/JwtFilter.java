@@ -5,6 +5,7 @@ import com.ankitaeduplatform.educationplatform.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,9 @@ import java.util.Collections;
 import java.util.Optional;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class JwtFilter extends OncePerRequestFilter { //runs only once for every http request
 
+    //field injection of beans
     @Autowired
     private JWTUtility jwtUtility;
 
@@ -31,17 +33,20 @@ public class JwtFilter extends OncePerRequestFilter {
     private UserRepository userRepository;
 
 
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+
         String token = null;
         String username = null;
 
-        //extract token
-        if(authHeader!= null && authHeader.startsWith("Bearer ")){
-            token = authHeader.substring(7);
+        if(request.getCookies() != null){
+            for(Cookie cookie : request.getCookies()){
+                if("jwt_token".equals(cookie.getName())){
+                    token = cookie.getValue();
+                    break;
+                }
+            }
         }
         //no token
         if(token == null){
@@ -51,6 +56,7 @@ public class JwtFilter extends OncePerRequestFilter {
         try{
             //extract username from token
             username = jwtUtility.extractUserName(token);
+            System.out.println("Token username = " + username);
         }catch(JwtException | IllegalArgumentException e){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

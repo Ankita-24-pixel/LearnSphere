@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CourseService {
@@ -27,10 +28,19 @@ public class CourseService {
     private TopicRepository topicRepository;
 
     public Course saveCourse(Course course){
+        Optional<Course> existing =
+                courseRepository.findByNameIgnoreCase(course.getName());
+
+        if(existing.isPresent()){
+            return existing.get();
+        }
         return courseRepository.save(course);
     }
     public List<Course> getAllCourses(){
         return courseRepository.findAll();
+    }
+    public void deleteCourse(Long id){
+        courseRepository.deleteById(id);
     }
 
     public Year saveYear(Year year){

@@ -4,12 +4,11 @@ import com.ankitaeduplatform.educationplatform.Service.ContentService;
 import com.ankitaeduplatform.educationplatform.dto.ContentResponse;
 import com.ankitaeduplatform.educationplatform.entity.Content;
 import com.ankitaeduplatform.educationplatform.entity.User;
-import com.ankitaeduplatform.educationplatform.repository.ContentRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +24,10 @@ public class ContentController {
 
     @PostMapping
     public ContentResponse addContent(@Valid @RequestBody Content content){
+        System.out.println(
+                "AUTH = " +
+                        SecurityContextHolder.getContext().getAuthentication()
+        );
         User user = (User) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -73,23 +76,57 @@ public class ContentController {
     }
 
     private ContentResponse mapTOdto(Content c) {
+        // Safely check who is currently looking at the data
+        User currentUser = null;
+        try {
+            currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        } catch (Exception e) {
+            // User is not logged in (fallback)
+        }
+
+        // Calculate our two new variables
+        int totalLikes = c.getLikedByUsers().size();
+        boolean isLiked = (currentUser != null) && c.getLikedByUsers().contains(currentUser);
+
+        boolean isOwner = currentUser != null &&
+                c.getUploadedBy().getId().equals(currentUser.getId());
+
+        boolean isAdmin = currentUser != null &&
+                "ADMIN".equals(currentUser.getRole());
         return new ContentResponse(
                 c.getId(),
                 c.getTitle(),
                 c.getUrl(),
-                c.getLikes(),
+                totalLikes, // <-- Send the total count here
                 c.getType().name(),
                 c.getTopic().getId(),
-                c.getUploadedBy().getUserName()
+                c.getUploadedBy().getUserName(),
+                isLiked,// <-- Send the boolean here! (Make sure your DTO constructor accepts this)
+                isOwner
         );
     }
 
     @PutMapping("/{id}/like")
-    public ResponseEntity<Content> likeContent(@PathVariable Long id){
+    public ResponseEntity<ContentResponse> likeContent(@PathVariable Long id){
+        // Find out who is clicking the button
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
         return contentService.getById(id)
                 .map(content -> {
-                    content.setLikes(content.getLikes() + 1);
-                    return ResponseEntity.ok(contentService.save(content));
+                    // TOGGLE LOGIC: If they already liked it, unlike it!
+                    if (content.getLikedByUsers().contains(currentUser)) {
+                        content.getLikedByUsers().remove(currentUser);
+                    } else {
+                        // Otherwise, add their like
+                        content.getLikedByUsers().add(currentUser);
+                    }
+                    Content saved = contentService.save(content);
+
+                    // Return the updated DTO back to React
+                    return ResponseEntity.ok(mapTOdto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
