@@ -5,6 +5,7 @@ import com.ankitaeduplatform.educationplatform.dto.*;
 import com.ankitaeduplatform.educationplatform.entity.*;
 import com.ankitaeduplatform.educationplatform.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
@@ -200,5 +201,10 @@ public class CourseController {
                         topic.getChapter().getSubject().getSem().getSem(),
                         topic.getChapter().getSubject().getSem().getCourse().getName()
                 )).toList();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCourse(@PathVariable Long id){
+        courseService.deleteCourse(id);
+        return ResponseEntity.ok("Course deleted successfully");
     }
 }

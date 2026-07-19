@@ -7,6 +7,10 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(
+        uniqueConstraints =
+        @UniqueConstraint(columnNames={"sem_id","name"})
+)
 public class Subject {
 
     @Id

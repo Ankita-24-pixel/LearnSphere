@@ -3,9 +3,7 @@ package com.ankitaeduplatform.educationplatform.Service;
 import com.ankitaeduplatform.educationplatform.entity.User;
 import com.ankitaeduplatform.educationplatform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +27,7 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
             return true;
+
         }catch(Exception e){
             e.printStackTrace();
             return false;
