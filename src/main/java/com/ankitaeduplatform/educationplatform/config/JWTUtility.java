@@ -2,6 +2,8 @@ package com.ankitaeduplatform.educationplatform.config;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -11,8 +13,14 @@ import java.util.Date;
 @Component
 public class JWTUtility {
     
-    private static final String SECRET = "fdafe8ryq3ue102i1ifsaodifhaiohp9323nkfhiafasfu490fklafiaoeipor332";
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    @Value("${JWT_SECRET}")
+    private String secret;
+    private SecretKey key;
+
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
     
     public String generateToken(String userName, String role){
         return Jwts.builder()
